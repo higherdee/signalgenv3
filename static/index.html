@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>SignalGen — AI Trading Signals</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2300d4aa'/%3E%3Cpath d='M25 70 L40 50 L55 60 L75 30' stroke='%23041014' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 100 100" width="28" height="28">
+      <rect width="100" height="100" rx="20" fill="#00d4aa"/>
+      <path d="M25 70 L40 50 L55 60 L75 30" stroke="#041014" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">SignalGen</span>
+      <span class="brand-sub">AI Trading Signals</span>
+    </div>
+  </div>
+  <div class="topbar-search">
+    <svg viewBox="0 0 24 24" width="16" height="16" class="search-icon">
+      <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <path d="m20 20-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <input id="pair-search" type="text" placeholder="Type any pair: BTC, EUR, GOLD..." autocomplete="off">
+    <div id="pair-suggestions" class="suggestions"></div>
+  </div>
+  <div class="topbar-controls">
+    <div class="tf-group">
+      <button class="tf-btn" data-tf="1m">1m</button>
+      <button class="tf-btn" data-tf="3m">3m</button>
+      <button class="tf-btn" data-tf="5m">5m</button>
+      <button class="tf-btn" data-tf="15m">15m</button>
+      <button class="tf-btn" data-tf="30m">30m</button>
+      <button class="tf-btn active" data-tf="1H">1H</button>
+      <button class="tf-btn" data-tf="4H">4H</button>
+      <button class="tf-btn" data-tf="1D">1D</button>
+    </div>
+    <button id="refresh-btn" class="btn">Refresh</button>
+  </div>
+  <div class="status-pill">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">Connecting</span>
+    <span class="status-lat" id="status-lat"></span>
+  </div>
+</header>
+<main class="layout">
+  <section class="panel chart-panel">
+    <header class="panel-head">
+      <div class="panel-title">
+        <span id="chart-symbol">-</span>
+        <span class="panel-meta" id="chart-meta">-</span>
+      </div>
+      <div class="chart-controls">
+        <label class="toggle"><input type="checkbox" id="toggle-ema" checked> <span>EMA</span></label>
+        <label class="toggle"><input type="checkbox" id="toggle-bb" checked> <span>Bands</span></label>
+        <label class="toggle"><input type="checkbox" id="toggle-markers" checked> <span>Signals</span></label>
+        <label class="toggle"><input type="checkbox" id="toggle-levels" checked> <span>T/P - S/L</span></label>
+        <label class="toggle smc-toggle"><input type="checkbox" id="toggle-fvg" checked> <span>FVG</span></label>
+        <label class="toggle smc-toggle"><input type="checkbox" id="toggle-bos" checked> <span>BOS</span></label>
+        <label class="toggle smc-toggle"><input type="checkbox" id="toggle-ob"> <span>Order Blocks</span></label>
+        <label class="toggle smc-toggle"><input type="checkbox" id="toggle-sweeps"> <span>Sweeps</span></label>
+      </div>
+    </header>
+    <div id="chart-host" class="chart-host">
+      <div class="skeleton-chart"><div class="sk-line"></div><div class="sk-line"></div><div class="sk-line"></div><div class="sk-line"></div></div>
+    </div>
+    <div id="chart-tooltip" class="chart-tooltip"></div>
+  </section>
+  <aside class="panel signal-panel">
+    <header class="panel-head">
+      <div class="panel-title">Signal</div>
+      <span class="badge" id="direction-badge">-</span>
+    </header>
+    <div class="signal-body">
+      <div class="signal-pair"><h2 id="s-pair">-</h2><div class="signal-meta"><span class="chip" id="s-class">-</span><span class="chip muted" id="s-mtf">-</span></div></div>
+      <div class="confidence-row"><div class="conf-label">Confidence</div><div class="conf-value" id="s-conf">-</div><div class="conf-bar"><div id="s-conf-bar" class="conf-bar-fill"></div></div></div>
+      <div class="trade-grid">
+        <div class="trade-cell entry"><div class="trade-label">Entry</div><div class="trade-value" id="s-entry">-</div></div>
+        <div class="trade-cell tp"><div class="trade-label">TP</div><div class="trade-value" id="s-tp">-</div></div>
+        <div class="trade-cell sl"><div class="trade-label">SL</div><div class="trade-value" id="s-sl">-</div></div>
+        <div class="trade-cell rr"><div class="trade-label">R:R</div><div class="trade-value" id="s-rr">-</div></div>
+      </div>
+      <div class="price-row"><div class="price-label">Last</div><div class="price-value" id="s-last">-</div><div class="price-change" id="s-24h">-</div></div>
+      <details class="accordion" open><summary>Why this signal</summary><ul class="rationale" id="s-rationale"></ul></details>
+      <details class="accordion"><summary>Key indicators</summary><div class="indicators-grid" id="ind-grid"></div></details>
+    </div>
+  </aside>
+  <section class="panel chat-panel" id="chat-panel">
+    <header class="panel-head">
+      <div class="panel-title"><span>🤖 AI Analyst</span></div>
+      <button id="chat-toggle" class="btn chat-toggle-btn">💬 Open</button>
+    </header>
+    <div class="chat-body" id="chat-body" hidden>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-quick">
+        <button class="chat-quick-btn" data-q="Why is this pair bullish?">Why bullish?</button>
+        <button class="chat-quick-btn" data-q="What is FVG?">What is FVG?</button>
+        <button class="chat-quick-btn" data-q="What is BOS?">What is BOS?</button>
+        <button class="chat-quick-btn" data-q="Should I buy now?">Should I buy?</button>
+        <button class="chat-quick-btn" data-q="What is RSI?">What is RSI?</button>
+      </div>
+      <form class="chat-input-row" id="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask about the chart or trading...">
+        <button type="submit" class="btn">Send</button>
+      </form>
+    </div>
+  </section>
+  <section class="panel ranking-panel" id="ranking-panel">
+    <header class="panel-head">
+      <div class="panel-title">Top 15 Pairs</div>
+      <span class="muted small" id="rank-meta">-</span>
+    </header>
+    <div class="table-wrap">
+      <table id="rank-table">
+        <thead><tr><th>#</th><th>Pair</th><th>Class</th><th class="num">Price</th><th class="num">24h</th><th>Trend</th><th class="num">Score</th><th class="num">Votes</th><th class="num">Sent</th></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer class="bottombar"><span>OKX · Yahoo · RSS News · AI Analyst</span><span class="muted">Not financial advice.</span></footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
