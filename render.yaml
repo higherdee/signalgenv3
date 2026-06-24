@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: signalgen
+    name: signalgenv3
     runtime: python
     plan: free
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
