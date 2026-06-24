@@ -1097,22 +1097,18 @@ class SignalGenerator:
             df = await self.market.okx_klines(symbol, okx_bar, limit)
             source = "OKX (real-time)"
         else:
-            # Yahoo: fetch 1h then aggregate for higher TFs
-            raw_interval = self.TF_TO_RAW.get(interval, ("1h", None))[0]
-            # Get enough 1h candles to build the requested TF
-            yahoo_period = "60d" if raw_interval == "1h" else "2y"
+            # Yahoo: only supports specific intervals natively.
+            # Map our interval to the closest one Yahoo supports.
+            yahoo_map = {
+                "1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m",
+                "1H": "60m", "1D": "1d", "1W": "1wk",
+            }
+            raw_interval = yahoo_map.get(interval, "60m")
+            yahoo_period = "60d" if raw_interval in ("1m", "5m", "15m", "30m", "60m") else "2y"
             data = await self.market.yahoo_batch([symbol], period=yahoo_period, interval=raw_interval)
             df = data.get(symbol)
             source = "Yahoo Finance"
-            # Aggregate if needed
-            if df is not None:
-                agg_map = {"2H": "2H", "4H": "4H", "6H": "6H", "12H": "12H"}
-                if interval in agg_map:
-                    df = df.resample(agg_map[interval], on="ts").agg({
-                        "open": "first", "high": "max", "low": "min",
-                        "close": "last", "volume": "sum",
-                    }).dropna().reset_index()
-                df = df.tail(limit)
+            df = df.tail(limit) if df is not None else None
         if df is None or df.empty:
             return {"error": f"No data for {symbol}"}
         df = TA.add_all(df)
