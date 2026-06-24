@@ -977,13 +977,6 @@ class SignalGenerator:
         last = float(df["close"].iloc[-1])
         prev24 = float(df["close"].iloc[-24]) if len(df) >= 24 else last
         change = (last - prev24) / prev24 * 100.0 if prev24 else 0.0
-        # Also get 4h (aggregate 1h into 4h ourselves)
-        if len(df) >= 8:
-            agg = df.resample("4H", on="ts").agg({
-                "open": "first", "high": "max", "low": "min",
-                "close": "last", "volume": "sum",
-            }).dropna().reset_index()
-            df.attrs["df4h"] = agg
         return sym, df, last, change, "Yahoo Finance (~15 min delayed)"
 
     # -----------------------------------------------------------------------
